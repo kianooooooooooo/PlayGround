@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#0b0705" />
+  <meta name="description" content="BLOODPIT — a brutal first-person gladiator arena. Sever limbs, shatter bone, and make the crowd roar." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23080604'/%3E%3Cpath d='M32 6l5 17 16 3-13 11 4 19-12-9-12 9 4-19L11 26l16-3z' fill='%23b21418'/%3E%3C/svg%3E" />
+  <title>BLOODPIT — The Sands Demand Blood</title>
+  <link rel="stylesheet" href="./src/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="game" aria-label="Bloodpit arena game"></canvas>
+
+    <div class="screen-vignette" aria-hidden="true"></div>
+    <div class="screen-grain" aria-hidden="true"></div>
+    <div id="damage-flash" aria-hidden="true"></div>
+    <div id="blood-drops" aria-hidden="true"></div>
+
+    <div id="boot" class="boot">
+      <div class="boot-mark">BLOODPIT</div>
+      <div class="boot-line"><span></span></div>
+      <div class="boot-copy">CHAINING THE BEASTS</div>
+    </div>
+
+    <!-- TITLE / LOADOUT -->
+    <section id="menu" class="menu" aria-label="Main menu">
+      <header class="menu-top">
+        <div class="brand-stamp">
+          <span class="brand-stamp__mark">B</span>
+          <span>HOUSE OF THE<br />SANDS</span>
+        </div>
+        <div class="menu-top__meta">
+          <span>ARENA // VII</span>
+          <span class="live-dot">CROWD PRESENT</span>
+        </div>
+      </header>
+
+      <div class="title-block">
+        <p class="eyebrow"><span></span> THE SANDS DEMAND BLOOD</p>
+        <h1 class="title" aria-label="Bloodpit">
+          <span class="title-word">BLOOD</span><span class="title-word title-word--pit">PIT</span>
+        </h1>
+        <p class="title-sub">NO GODS. NO MERCY. NO BELL TO SAVE YOU.</p>
+        <p class="title-copy">A first-person trial of steel and savagery. Choose your instrument. Take their arms. Take their legs. Leave the rest for the crows.</p>
+      </div>
+
+      <div class="loadout">
+        <div class="loadout-head">
+          <span>CHOOSE YOUR INSTRUMENT</span>
+          <span class="loadout-rule"></span>
+          <span class="loadout-num">01 / 02</span>
+        </div>
+
+        <div class="weapon-row" role="radiogroup" aria-label="Starting weapon">
+          <button class="weapon-card is-selected" data-weapon="sword" role="radio" aria-checked="true">
+            <span class="weapon-card__index">I</span>
+            <span class="weapon-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 64 64"><path d="M47 7l9 1-1 9-28 28-8 2 2-8L47 7zM19 39l6 6M11 44l9 9M18 51l-5 8-8-8 8-5z" /></svg>
+            </span>
+            <span class="weapon-card__body">
+              <strong>SWORD</strong>
+              <em>THE SURGEON</em>
+              <span>Cleave. Sever. Split. Precision keeps the canvas wet.</span>
+            </span>
+            <span class="weapon-card__tag">SEVER</span>
+            <span class="weapon-card__check" aria-hidden="true"></span>
+          </button>
+
+          <button class="weapon-card" data-weapon="hammer" role="radio" aria-checked="false">
+            <span class="weapon-card__index">II</span>
+            <span class="weapon-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 64 64"><path d="M25 10h25v14H25zM10 16h15v3H10zM28 24h6v32h-6zM18 54h26v6H18z" /></svg>
+            </span>
+            <span class="weapon-card__body">
+              <strong>HAMMER</strong>
+              <em>THE BUTCHER</em>
+              <span>Crush. Fracture. Open. Leave the bone where the light can find it.</span>
+            </span>
+            <span class="weapon-card__tag">SHATTER</span>
+            <span class="weapon-card__check" aria-hidden="true"></span>
+          </button>
+        </div>
+
+        <div class="play-row">
+          <button id="play-btn" class="play-btn" type="button">
+            <span class="play-btn__glow"></span>
+            <span class="play-btn__label">PLAY</span>
+            <span class="play-btn__arrow" aria-hidden="true">↗</span>
+          </button>
+          <div class="play-note">
+            <span>HEADPHONES RECOMMENDED</span>
+            <span>CONTAINS GRAPHIC STYLISED VIOLENCE</span>
+          </div>
+        </div>
+      </div>
+
+      <footer class="menu-foot">
+        <div class="controls-strip">
+          <span><kbd>WASD</kbd> MOVE</span>
+          <span><kbd>LMB</kbd> STRIKE</span>
+          <span><kbd>RMB</kbd> HEAVY</span>
+          <span><kbd>SPACE</kbd> DODGE</span>
+        </div>
+        <span class="build-stamp">BUILD 0.9.7 // SANDS OF CARCASSA</span>
+      </footer>
+      <div class="menu-warning">THIS ARENA CONTAINS SEVERE, STYLISED VIOLENCE AND GORE.</div>
+    </section>
+
+    <!-- IN-GAME HUD -->
+    <section id="hud" class="hud is-hidden" aria-label="Game heads up display">
+      <div class="hud-top">
+        <div class="hud-wave">
+          <span class="hud-kicker">WAVE</span>
+          <strong id="wave-num">I</strong>
+          <span id="wave-name" class="hud-wave__name">THE FIRST SPILL</span>
+        </div>
+
+        <div class="crowd-meter">
+          <div class="crowd-meter__labels">
+            <span>CROWD FAVOR</span>
+            <strong id="favor-num">0</strong>
+          </div>
+          <div class="crowd-meter__track"><span id="favor-fill"></span></div>
+          <div id="crowd-cheer" class="crowd-cheer">THE CROWD ROARS</div>
+        </div>
+
+        <div class="hud-score">
+          <div><span>KILLS</span><strong id="kill-num">00</strong></div>
+          <div><span>SCORE</span><strong id="score-num">0000</strong></div>
+        </div>
+      </div>
+
+      <div class="enemy-track" aria-label="Enemies remaining">
+        <span class="enemy-track__label">BEASTS REMAIN</span>
+        <div id="enemy-pips" class="enemy-pips"></div>
+      </div>
+
+      <div class="kill-feed" id="kill-feed" aria-live="polite"></div>
+
+      <div id="crosshair" class="crosshair" aria-hidden="true">
+        <span class="crosshair__tick crosshair__tick--tl"></span>
+        <span class="crosshair__tick crosshair__tick--tr"></span>
+        <span class="crosshair__tick crosshair__tick--bl"></span>
+        <span class="crosshair__tick crosshair__tick--br"></span>
+        <span class="crosshair__dot"></span>
+        <svg class="crosshair__ring" viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="35"></circle>
+        </svg>
+      </div>
+
+      <div class="hud-bottom">
+        <div class="vitals">
+          <div class="vitals__head">
+            <span>VITALITY</span>
+            <strong id="health-num">100</strong>
+          </div>
+          <div class="vitals__bar"><span id="health-fill"></span><i></i></div>
+          <div class="vitals__status">
+            <span id="status-text">STEEL IN HAND</span>
+            <span id="dodge-status">DODGE READY</span>
+          </div>
+        </div>
+
+        <div class="weapon-slot">
+          <span id="weapon-glyph" class="weapon-slot__glyph">†</span>
+          <div>
+            <span class="weapon-slot__kicker">EQUIPPED</span>
+            <strong id="weapon-name">GLADIUS</strong>
+            <span id="weapon-mode">LMB SEVER // RMB CLEAVE</span>
+          </div>
+          <div class="weapon-slot__swap"><kbd>1</kbd><kbd>2</kbd><span>SWAP BETWEEN WAVES</span></div>
+        </div>
+
+        <div class="combo-box">
+          <span class="combo-box__kicker">BLOOD TALLY</span>
+          <div><strong id="combo-num">x1</strong><span id="combo-label">CLEAN WORK</span></div>
+          <div class="combo-box__bar"><span id="combo-fill"></span></div>
+        </div>
+      </div>
+
+      <div class="hint-strip" id="hint-strip">
+        <span><kbd>CLICK</kbd> CAPTURE MOUSE</span>
+        <span><kbd>ESC</kbd> PAUSE</span>
+      </div>
+    </section>
+
+    <div id="wave-banner" class="wave-banner is-hidden" aria-live="polite">
+      <span id="wave-banner-kicker">WAVE I</span>
+      <strong id="wave-banner-title">THE FIRST SPILL</strong>
+      <span id="wave-banner-sub">THE GATES OPEN</span>
+    </div>
+
+    <section id="intermission" class="intermission is-hidden" aria-label="Wave cleared">
+      <span class="intermission__kicker">THE SANDS GO QUIET</span>
+      <h2>WAVE CLEARED</h2>
+      <p id="intermission-copy">The crowd wants more. Give them something to remember.</p>
+      <div class="intermission__weapons">
+        <button class="mini-weapon is-selected" data-weapon="sword">
+          <span>I</span><strong>SWORD</strong><em>SEVER</em>
+        </button>
+        <button class="mini-weapon" data-weapon="hammer">
+          <span>II</span><strong>HAMMER</strong><em>SHATTER</em>
+        </button>
+      </div>
+      <div class="intermission__count"><span>NEXT WAVE IN</span><strong id="intermission-timer">04</strong></div>
+    </section>
+
+    <section id="pause" class="modal is-hidden" aria-label="Paused">
+      <div class="modal__panel">
+        <span class="modal__kicker">THE CROWD WAITS</span>
+        <h2>PAUSED</h2>
+        <p>They can smell the blood from the stands.</p>
+        <button id="resume-btn" class="modal-btn">RETURN TO THE SAND</button>
+        <button id="quit-btn" class="modal-btn modal-btn--ghost">ABANDON THE PIT</button>
+      </div>
+    </section>
+
+    <section id="death" class="modal modal--death is-hidden" aria-label="You died">
+      <div class="modal__panel modal__panel--death">
+        <span class="modal__kicker">THE CROWD FALLS SILENT</span>
+        <h2>YOU ARE<br /><span>CARRIÓN</span></h2>
+        <p id="death-copy">Your blood joins the sand. The arena always finds another fool.</p>
+        <div class="death-stats">
+          <div><span>WAVE REACHED</span><strong id="death-wave">I</strong></div>
+          <div><span>BEASTS SLAIN</span><strong id="death-kills">0</strong></div>
+          <div><span>FAVOR EARNED</span><strong id="death-score">0</strong></div>
+        </div>
+        <button id="restart-btn" class="modal-btn">RISE AGAIN</button>
+      </div>
+    </section>
+
+    <!-- TOUCH CONTROLS -->
+    <div id="touch-controls" class="touch-controls is-hidden" aria-label="Touch controls">
+      <div id="joystick" class="joystick"><span id="joystick-knob"></span></div>
+      <div class="touch-actions">
+        <button id="touch-heavy" class="touch-btn touch-btn--heavy" aria-label="Heavy attack">HEAVY</button>
+        <button id="touch-attack" class="touch-btn touch-btn--attack" aria-label="Attack">STRIKE</button>
+        <button id="touch-dodge" class="touch-btn touch-btn--dodge" aria-label="Dodge">DODGE</button>
+      </div>
+      <div class="look-hint">DRAG TO LOOK</div>
+    </div>
+
+    <div id="toast" class="toast" aria-live="polite"></div>
+    <div id="fps" class="fps" aria-hidden="true"></div>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

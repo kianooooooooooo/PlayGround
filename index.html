@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#160d0a">
+  <meta name="description" content="Blood & Sand — a gory first-person gladiator arena. Sever limbs, crush skulls, and make the crowd roar.">
+  <title>BLOOD &amp; SAND — Colosseum Arena</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23160d0a'/%3E%3Cpath d='M14 50 L46 18 M20 12 L52 44' stroke='%23d4af37' stroke-width='5'/%3E%3Ccircle cx='32' cy='32' r='9' fill='%23780d0d'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <canvas id="game" aria-label="Blood and Sand arena game"></canvas>
+    <div id="vignette" aria-hidden="true"></div>
+    <div id="grain" aria-hidden="true"></div>
+    <div id="blood-flash" aria-hidden="true"></div>
+    <div id="damage-ring" aria-hidden="true"></div>
+
+    <div id="hud" class="hidden">
+      <div class="hud-top">
+        <div class="vitality">
+          <div class="vitality-head">
+            <span class="eyebrow">VITALITY</span>
+            <span id="health-number">100</span>
+          </div>
+          <div class="health-track"><div id="health-fill" class="health-fill"></div></div>
+          <div class="vitality-under"><span id="player-status">UNHARMED</span><span class="dodge-label">SPACE · DODGE</span></div>
+        </div>
+        <div class="wave-panel">
+          <span class="eyebrow">WAVE</span>
+          <span id="wave-number" class="wave-number">I</span>
+          <span id="foes-left" class="foes-left">3 FOES REMAIN</span>
+        </div>
+        <div class="tally">
+          <span class="eyebrow">SLAIN</span>
+          <span id="kill-count" class="kill-count">0</span>
+          <span class="eyebrow score-label">SCORE</span>
+          <span id="score-count" class="score-count">0</span>
+        </div>
+      </div>
+
+      <div id="crosshair" class="crosshair" aria-hidden="true">
+        <span class="ch-dot"></span>
+        <span class="ch-bar ch-top"></span>
+        <span class="ch-bar ch-right"></span>
+        <span class="ch-bar ch-bottom"></span>
+        <span class="ch-bar ch-left"></span>
+      </div>
+
+      <div id="wave-banner" class="wave-banner hidden">
+        <span id="banner-kicker" class="banner-kicker">THE GATES OPEN</span>
+        <span id="banner-title" class="banner-title">WAVE I</span>
+        <span id="banner-sub" class="banner-sub">THREE CHALLENGERS ENTER</span>
+      </div>
+
+      <div id="toast" class="toast hidden">THE CROWD ROARS</div>
+
+      <div class="hud-bottom">
+        <div class="weapon-panel">
+          <div id="weapon-icon" class="weapon-icon"></div>
+          <div class="weapon-copy">
+            <span class="eyebrow">ARMED WITH</span>
+            <strong id="hud-weapon-name">GLADIUS</strong>
+            <span id="hud-weapon-sub">CUT · SEVER · BISECT</span>
+          </div>
+          <span class="swap-hint">R · SWAP</span>
+        </div>
+        <div class="control-hint">
+          <span><b>WASD</b> MOVE</span>
+          <span><b>LMB</b> STRIKE</span>
+          <span><b>RMB</b> HEAVY</span>
+          <span><b>SHIFT</b> SPRINT</span>
+          <span><b>SPACE</b> DODGE</span>
+        </div>
+        <div class="sound-hint">
+          <button id="mute-btn" class="mute-btn" aria-label="Mute audio">SOUND ON</button>
+        </div>
+      </div>
+
+      <div id="combo" class="combo hidden"></div>
+    </div>
+
+    <div id="title" class="screen title-screen">
+      <div class="title-deco left" aria-hidden="true"></div>
+      <div class="title-deco right" aria-hidden="true"></div>
+      <div class="title-inner">
+        <div class="kicker"><span></span> THE EMPEROR DEMANDS BLOOD <span></span></div>
+        <h1 class="game-title">BLOOD<span class="amp">&amp;</span>SAND</h1>
+        <p class="tagline">A COLOSSEUM RECKONING</p>
+        <p class="blurb">The sun is high. The sand is thirsty. Choose your iron and give the crowd a show.</p>
+
+        <div class="weapon-picker" role="group" aria-label="Choose starting weapon">
+          <button class="weapon-card selected" data-weapon="sword" aria-label="Choose sword">
+            <span class="card-glow"></span>
+            <svg viewBox="0 0 64 64" class="card-icon" aria-hidden="true">
+              <path d="M32 5 L37 17 L35 43 L32 48 L29 43 L27 17 Z" fill="currentColor"/>
+              <rect x="19" y="43" width="26" height="4" rx="1" fill="currentColor"/>
+              <rect x="30" y="47" width="4" height="9" fill="currentColor"/>
+              <circle cx="32" cy="58" r="3.4" fill="currentColor"/>
+            </svg>
+            <span class="card-name">GLADIUS</span>
+            <span class="card-desc">Cut limbs clean. Split skulls. Bisect a man at the waist.</span>
+            <span class="card-tag">SWORD</span>
+          </button>
+          <button class="weapon-card" data-weapon="hammer" aria-label="Choose hammer">
+            <span class="card-glow"></span>
+            <svg viewBox="0 0 64 64" class="card-icon" aria-hidden="true">
+              <path d="M30 22 L34 22 L36 54 L28 54 Z" fill="currentColor"/>
+              <rect x="13" y="9" width="38" height="15" rx="3" fill="currentColor"/>
+              <rect x="17" y="24" width="30" height="5" fill="currentColor" opacity=".65"/>
+              <path d="M13 13 L7 17 L13 21 M51 13 L57 17 L51 21" fill="currentColor"/>
+            </svg>
+            <span class="card-name">WAR HAMMER</span>
+            <span class="card-desc">Cave in a skull. Tear a jaw off. Leave bone jutting from broken limbs.</span>
+            <span class="card-tag">HAMMER</span>
+          </button>
+        </div>
+
+        <button id="play-btn" class="play-btn" aria-label="Play">
+          <span class="play-shine"></span>
+          PLAY
+        </button>
+        <div class="title-foot">
+          <span><b>WASD</b> MOVE</span>
+          <span><b>MOUSE</b> LOOK</span>
+          <span><b>LMB</b> STRIKE</span>
+          <span><b>RMB</b> HEAVY BLOW</span>
+          <span><b>R</b> SWAP WEAPON</span>
+        </div>
+        <div class="disclaimer">Contains stylised blood, dismemberment and bone. Not for the squeamish.</div>
+      </div>
+      <div class="title-version">BLOOD &amp; SAND · ANNO MMXXVI</div>
+    </div>
+
+    <div id="pause" class="screen pause-screen hidden">
+      <div class="pause-card">
+        <span class="kicker"><span></span> THE SANDS WAIT <span></span></span>
+        <h2>PAUSED</h2>
+        <p>The crowd grows restless.</p>
+        <button id="resume-btn" class="play-btn small">RESUME</button>
+        <div class="title-foot"><span><b>ESC</b> RESUME</span><span><b>M</b> MUTE</span></div>
+      </div>
+    </div>
+
+    <div id="gameover" class="screen gameover-screen hidden">
+      <div class="gameover-card">
+        <span id="death-kicker" class="kicker"><span></span> THE SAND DRINKS DEEP <span></span></span>
+        <h2 id="death-title">YOU FALL</h2>
+        <p id="death-line">The crowd screams for more. There is always another challenger.</p>
+        <div class="stat-row">
+          <div><span class="eyebrow">WAVE REACHED</span><strong id="final-wave">I</strong></div>
+          <div><span class="eyebrow">SLAIN</span><strong id="final-kills">0</strong></div>
+          <div><span class="eyebrow">SCORE</span><strong id="final-score">0</strong></div>
+        </div>
+        <button id="restart-btn" class="play-btn small">PLAY AGAIN</button>
+        <button id="menu-btn" class="ghost-btn">CHANGE WEAPON</button>
+      </div>
+    </div>
+
+    <div id="rotate-hint" aria-hidden="true">
+      <span>TURN YOUR DEVICE</span>
+      <small>For the widest view of the arena</small>
+    </div>
+
+    <div id="touch" class="touch-ui hidden">
+      <div id="joystick" class="joystick" aria-label="Movement joystick">
+        <span class="joystick-ring"></span>
+        <span id="joystick-knob" class="joystick-knob"></span>
+      </div>
+      <div class="touch-actions">
+        <button id="touch-heavy" class="touch-btn heavy" aria-label="Heavy attack">HEAVY</button>
+        <button id="touch-swap" class="touch-btn small-btn" aria-label="Swap weapon">SWAP</button>
+        <button id="touch-dodge" class="touch-btn small-btn" aria-label="Dodge">DODGE</button>
+        <button id="touch-attack" class="touch-btn attack" aria-label="Attack">STRIKE</button>
+      </div>
+    </div>
+
+    <div id="loading" class="loading">
+      <div class="loading-mark">B&amp;S</div>
+      <div class="loading-bar"><span></span></div>
+      <span class="loading-text">RAKING THE SAND</span>
+    </div>
+  </div>
+
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three.module.js" } }
+  </script>
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
